@@ -1,0 +1,19 @@
+# Main environment. Python 3.12, Linux, glibc 2.39.
+# CUDA wheels are pinned to cu126; install from the PyTorch index for that build.
+biopython==1.84
+boltz==2.2.1
+gemmi==0.6.5
+h5py==3.16.0
+numpy==1.26.4
+pandas==3.0.3
+posebusters==0.6.5
+pyarrow==25.0.0
+pytorch-lightning==2.5.0
+rdkit==2026.3.3
+requests==2.32.3
+scikit-learn==1.6.1
+scipy==1.13.1
+spyrmsd==0.9.0
+torch==2.12.0+cu126
+torchvision==0.27.0+cu126
+tqdm==4.68.0

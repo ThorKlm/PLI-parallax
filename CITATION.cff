@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: If you use this software, please cite the dataset and the accompanying article.
+title: PLI-parallax
+abstract: Pipeline producing protein-ligand coordinates from multiple structure predictors and crystal structures, with derived distance and contact labels.
+type: software
+authors:
+  - family-names: Klamt
+    given-names: Thor
+    affiliation: L3S Research Center, Leibniz University Hannover
+    orcid: https://orcid.org/0009-0005-6168-3655
+repository-code: https://github.com/ThorKlm/PLI-parallax
+license: Apache-2.0
+version: 1.0.0
+date-released: 2026-08-26
