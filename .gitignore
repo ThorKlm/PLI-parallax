@@ -1,0 +1,7 @@
+.idea/
+data/
+__pycache__/
+*.pyc
+*.tar.gz
+*.h5
+*.parquet
