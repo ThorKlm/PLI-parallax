@@ -4,7 +4,8 @@ Pipeline producing three-dimensional coordinates for protein-ligand systems from
 four architecturally distinct structure-prediction and docking programs, together
 with residue-to-ligand-atom distance labels derived from those coordinates.
 
-Data: 10.5281/zenodo.21560088 (CC-BY-4.0)
+Data: 10.5281/zenodo.21560088 (CC-BY-4.0), byte-canonical
+Mirror: https://huggingface.co/datasets/ThorKl/PLI-parallax, re-encoded on upload
 Code: this repository (Apache-2.0), archived at Zenodo on release
 Paper: ARTICLE_DOI once available
 
@@ -65,7 +66,10 @@ A few minutes plus teacher model weight downloads.
 ## Data
 
 This pipeline produces the dataset archived at Zenodo 10.5281/zenodo.21560088
-(CC-BY-4.0). This repository contains code only.
+(CC-BY-4.0). A convenience mirror of the tabular layer is at
+https://huggingface.co/datasets/ThorKl/PLI-parallax; its Parquet files are
+re-encoded on upload, so checksums differ from the Zenodo manifest while the
+content is identical. This repository contains code only.
 
 ## Cite
 
