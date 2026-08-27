@@ -43,13 +43,13 @@ differ between the two, so ligand perception is not identical across them.
 
 ## Teacher arms
 
-Nine prediction arms across four configurations. Recycling depth was read from
+Eight prediction arms across four configurations. Recycling depth was read from
 each run hparams.yaml rather than from documentation and differs between arms.
 The per-arm table is in the accompanying Data Descriptor.
 
     chai1               recycles 1, timesteps 80, ESM, 5 samples, rank-0
     boltz2 single-seq   msa empty, recycles 1, sampling 50, 1 sample
-    boltz2 alignment    ColabFold MSA, recycles 1 or 3 by arm
+    boltz2 alignment    ColabFold MSA, recycles 1
     smina               exhaustiveness 8 corpus, 4 crystal, num_modes 1
 
 ## Install
@@ -78,3 +78,12 @@ See CITATION.cff.
 ## License
 
 Code Apache-2.0. Data CC-BY-4.0.
+
+## Not included
+
+Two steps in the published pipeline are not in this repository. No script here
+writes the deposited Parquet distance tables from the intermediate npz shards;
+that conversion was performed ad hoc, so the deposited tables are not
+regenerable from this code alone, although every stage before and after them is.
+The corpus-tier pocket annotation was produced by a three-detector ensemble
+maintained outside this project and is deposited as a finished artifact.

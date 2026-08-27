@@ -4,6 +4,7 @@ biopython==1.84
 boltz==2.2.1
 gemmi==0.6.5
 h5py==3.16.0
+matplotlib==3.11.1
 numpy==1.26.4
 pandas==3.0.3
 posebusters==0.6.5
