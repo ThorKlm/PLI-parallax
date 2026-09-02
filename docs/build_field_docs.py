@@ -249,7 +249,7 @@ def patch_readme(deposit, block, write):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--deposit", default="/workspace/deposit_v3")
+    ap.add_argument("--deposit", default=".")
     ap.add_argument("--data-records")
     ap.add_argument("--check", action="store_true", help="validate only, write nothing")
     a = ap.parse_args()

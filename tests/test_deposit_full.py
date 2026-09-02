@@ -23,9 +23,9 @@ import pyarrow.parquet as pq
 import pyarrow.compute as pc
 
 D = sys.argv[1] if len(sys.argv) > 1 else "."
-STRUCTURES = os.environ.get("PLIP_STRUCTURES", "/workspace/structures_crystal")
-AF = os.environ.get("PLIP_AF", "/workspace/af_all")
-SYS2ACC = os.environ.get("PLIP_SYS2ACC", "/workspace/sys2acc.json")
+STRUCTURES = os.environ.get("PLIP_STRUCTURES", "")
+AF = os.environ.get("PLIP_AF", "")
+SYS2ACC = os.environ.get("PLIP_SYS2ACC", "")
 
 AA = set("ALA ARG ASN ASP CYS GLN GLU GLY HIS ILE LEU LYS MET PHE PRO SER "
          "THR TRP TYR VAL".split())
