@@ -1,4 +1,4 @@
-# pli-parallax
+# PLI-parallax
 
 Pipeline producing three-dimensional coordinates for protein-ligand systems from
 three structure-prediction and docking programs run in four configurations,
@@ -28,9 +28,8 @@ the store; the store is the primary artifact.
     store/        build and verify the coordinate store
     splits/       construct the leakage-controlled split family
     reliability/  fit and apply the per-system reliability annotation
-    tests/test_deposit_full.py         57 checks against the deposit
-    docs/build_field_docs.py           field dictionary and record sets
-    docs/verify_quoted_figures_v2.py   figures quoted in the article
+    docs/         generate the field dictionary and verify quoted figures
+    tests/        validation suite for the published deposit
     figures/      manuscript figures and the script that generates them
 
 ## Environments
