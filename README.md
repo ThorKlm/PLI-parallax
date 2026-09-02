@@ -29,9 +29,8 @@ the store; the store is the primary artifact.
     splits/       construct the leakage-controlled split family
     reliability/  fit and apply the per-system reliability annotation
     docs/         generate the field dictionary, manifest and validation report
-    tests/        eight validation suites run against the published deposit
+    tests/        validation suite for the published deposit
     figures/      manuscript figures and the script that generates them
-    superseded/   retained for provenance, do not use, see file headers
 
 ## Environments
 
@@ -71,17 +70,18 @@ A few minutes plus teacher model weight downloads.
 ## Paths
 
 Pipeline scripts use the absolute paths of the machine they ran on. Most stages
-need the intermediate prediction outputs, which are not deposited, so some of 
-them are not runnable elsewhere. The scripts that read only the published
-deposit take the deposit root as an argument: the validation suite under
-`tests/`, `docs/build_field_docs.py` and `docs/verify_quoted_figures.py`.
+need the intermediate prediction outputs, which are not deposited, so they are
+not runnable elsewhere. The scripts that read only the published deposit take
+the deposit root as an argument, defaulting to the current directory:
 
-The scripts that read the published deposit take the
-deposit root as an argument, defaulting to the current directory:
+    tests/test_deposit_full.py         57 checks against the deposit
+    docs/build_field_docs.py           field dictionary and record sets
+    docs/verify_quoted_figures_v2.py   figures quoted in the article
+    docs/verify_scoring_figures.py     scoring figures quoted in the article
 
-    tests/test_deposit*.py            eight validation suites
-    docs/build_field_docs.py          field dictionary and record sets
-    docs/verify_quoted_figures_v2.py  every figure quoted in the article
+Seven of the checks compare the coordinate store against the structures it was
+built from and report as skipped unless PLIP_STRUCTURES, PLIP_AF and
+PLIP_SYS2ACC point at them.
 
 ## Data
 
