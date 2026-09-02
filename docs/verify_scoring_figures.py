@@ -3,19 +3,19 @@
 deposit: PoseBusters rates, symmetry-corrected RMSD, contact accuracy, the
 training-cutoff split and the teacher-independence correlations.
 
-Companion to verify_quoted_figures.py, which covers the deposit. Three outcomes
+Companion to verify_quoted_figures_v2.py, which covers the deposit. Three outcomes
 per claim: PASS or FAIL for anything recomputed against a quoted value, VALUE
 for a quantity recomputed and reported without a target, and MANUAL for a number
 the manuscript quotes that no computation here reaches, listed with its source.
 
-Read-only. Runs on the primary, C.40516683."""
+Read-only. Needs the scoring layer, which is not part of the deposit."""
 import glob, json, os, sys, collections
 import numpy as np
 
-PB   = "/workspace/posebusters"
-BISY = "/workspace/datasets/experimental_expansion/bisy_v2"
-REP  = "/workspace/reports"
-LAB  = "/workspace/deposit_v3/labels"
+PB   = os.environ.get("PLIP_POSEBUSTERS", "/workspace/posebusters")
+BISY = os.environ.get("PLIP_BISY", "/workspace/datasets/experimental_expansion/bisy_v2")
+REP  = os.environ.get("PLIP_REPORTS", "/workspace/reports")
+LAB  = os.environ.get("PLIP_DEPOSIT", ".") + "/labels"
 fails = []
 def check(name, got, want, tol=5e-4, unit=""):
     ok = got is not None and abs(got - want) <= tol

@@ -1,3 +1,40 @@
+"""Coordinate store builder, v6.
+Three coordinates per residue: ca, sc_centroid, pep_c, all full-protein.
+Residue gate matched to the label extractor, so the store and the distance
+tables share one residue enumeration.
+
+Derived from build_coord_store.py (md5 895ef6f2c4318eeb7ee4c447e9dc4bab) with
+four changes, all made on 28 August 2026:
+
+1. res_types is written as a dataset rather than an HDF5 attribute. As an
+   attribute it exceeds the 64 KB object-header limit above roughly 21,800
+   CA residues, which raised OSError after the group and ligand data had been
+   written and left a malformed partial group. The July crystal store contains
+   42 such groups.
+
+2. gather() accepts {sid}_model_0.cif as well as {sid}*_model_0.pdb for the
+   boltz2 teacher. The regenerated corpus arm was written with
+   --output_format mmcif; the superseded arm was PDB.
+
+3. A receptor fallback for smina. smina docks into an AlphaFold model and
+   writes only an SDF, so the per-teacher protein loop produces no protein
+   group for it and every docking-only system previously carried a ligand and
+   no receptor. The fallback reads that same AlphaFold model, so the pose is
+   already in its frame and no superposition is needed. Requires --af and
+   --sys2acc. Recovers roughly 8,100 corpus systems.
+
+4. Used with roots_corpus_v3.json rather than roots_corpus.json. The v2 file
+   lists six of the eight Chai roots and points boltz2 at boltz_out_fill, the
+   1,339 systems that survived the deletion of the original corpus arm. The v3
+   file names one root per teacher, each a merged tree built in v2 roots order
+   with no-clobber so per-system precedence is unchanged:
+     chai_union         24,738 symlinks over eight Chai roots
+     boltz_corpus_final 23,494 systems, regenerated arm, first-wins by instance
+     smina_union        121,367 SDFs over 22 docking roots
+   roots_corpus.json is retained as the record of per-pose provenance.
+
+Invocation used for the deposited corpus tier is in run_v3.sh.
+"""
 """Build the tripose coordinate datasets from raw teacher structures.
 
 Multi-teacher 3D coordinates for protein-ligand pose supervision, keyed by
@@ -209,25 +246,66 @@ def lig_from_pdb(path):
             xyz.append((float(ln[30:38]), float(ln[38:46]), float(ln[46:54]))); sym.append(el)
     return sym, np.asarray(xyz, np.float32).reshape(-1, 3)
 
+# OXT is the terminal carboxyl oxygen and is backbone, not side chain. Without
+# it here the C-terminal residue of every chain gets a side-chain centroid
+# displaced by a median 0.83 A, and a C-terminal glycine acquires a spurious
+# one-atom "side chain" 2.4 A from its CA with sc_valid wrongly True.
+BACKBONE = ("N", "CA", "C", "O", "OXT")
+
+# Residue gate, identical to the one the label extractor and build_chain_schema.py
+# use: the standard twenty, a CA, and at least one heavy atom. Without the name
+# check a calcium ion, whose single atom is named CA, is recorded as a residue,
+# and the store's residue enumeration diverges from res_row in the tables.
+AA = set("ALA ARG ASN ASP CYS GLN GLU GLY HIS ILE LEU LYS MET PHE PRO SER THR "
+         "TRP TYR VAL".split())
+
 def protein_atoms(path):
+    """Per residue: the CA, a side-chain centroid, and the backbone carbonyl
+    carbon, all full-protein and aligned with one another by position. Plus the
+    all-atom heavy-atom list with its dense residue index."""
     st = gemmi.read_structure(path)
     ca, rt, ax, ar, ae = [], [], [], [], []
+    sc, sv, pc = [], [], []
     ri = 0
     for chain in st[0]:
         for res in chain:
-            if res.name in LIG_NAMES:
+            if res.name not in AA:
                 continue
             c = res.find_atom("CA", "*")
             if c is None:
                 continue
-            ca.append((c.pos.x, c.pos.y, c.pos.z)); rt.append(res.name)
+            if not any(a.element.name not in ("H", "D") for a in res):
+                continue
+            cap = (c.pos.x, c.pos.y, c.pos.z)
+            ca.append(cap); rt.append(res.name)
+            heavy, side = [], []
             for a in res:
-                if a.element.name == "H":
+                if a.element.name in ("H", "D"):
                     continue
-                ax.append((a.pos.x, a.pos.y, a.pos.z)); ar.append(ri); ae.append(a.element.name)
+                p = (a.pos.x, a.pos.y, a.pos.z)
+                ax.append(p); ar.append(ri); ae.append(a.element.name)
+                heavy.append(p)
+                if a.name not in BACKBONE:
+                    side.append(p)
+            # Side-chain bead. Glycine has no side-chain heavy atom, so it falls
+            # back to the residue centroid over N, CA, C, O rather than to the CA
+            # itself: a bead coincident with a stored coordinate would give a
+            # distance-based consumer a degenerate zero-length pair. This departs
+            # from cg2all and Rosetta, which place it at the CA.
+            if side:
+                sc.append(np.mean(side, axis=0)); sv.append(True)
+            else:
+                sc.append(np.mean(heavy, axis=0) if heavy else cap); sv.append(False)
+            # Peptide bead. The backbone carbonyl carbon, a real atom present in
+            # every residue including the last, so no mask and no chain-break
+            # case. Carries chain direction and peptide-plane orientation.
+            cc = res.find_atom("C", "*")
+            pc.append((cc.pos.x, cc.pos.y, cc.pos.z) if cc is not None else cap)
             ri += 1
     return (np.asarray(ca, np.float32), rt,
-            np.asarray(ax, np.float32).reshape(-1, 3), np.asarray(ar, np.int32), ae)
+            np.asarray(ax, np.float32).reshape(-1, 3), np.asarray(ar, np.int32), ae,
+            np.asarray(sc, np.float32).reshape(-1, 3), np.asarray(sv, bool),
+            np.asarray(pc, np.float32).reshape(-1, 3))
 
 def q(xyz, c):
     return np.clip(np.round((xyz - c) * SCALE), -32768, 32767).astype(np.int16)
@@ -261,7 +339,8 @@ def gather(sid, A):
     pdb = sid.split("_")[0]; s = {}
     c = sorted(glob.glob(f"{A.chai}/{sid}/*.cif")) or sorted(glob.glob(f"{A.chai_crystal}/{sid}/*.cif"))
     if c: s["chai1"] = c[:MAX_POSE]
-    b = glob.glob(f"{A.boltz}/**/{sid}*_model_0.pdb", recursive=True)
+    b = (glob.glob(f"{A.boltz}/**/{sid}_model_0.cif", recursive=True) or
+         glob.glob(f"{A.boltz}/**/{sid}*_model_0.pdb", recursive=True))
     if b: s["boltz2"] = [b[0]]
     bm = glob.glob(f"{A.boltz_msa}/**/{sid}*_model_0.pdb", recursive=True)
     if bm: s["boltz2_msa"] = [bm[0]]
@@ -391,18 +470,31 @@ def build_system(sid, smiles, ccd, A, out):
 
     for t, paths in src.items():
         pth = paths[0]
-        if not pth.endswith((".cif", ".pdb")) or t not in per:
+        if not pth.endswith((".cif", ".pdb")):
+            continue
+        # A receptor is written when a pose exists in ITS frame. For a predicted
+        # teacher that means the teacher's own pose, since its receptor and
+        # ligand are one prediction. The deposited crystal structure is
+        # different: it is the frame of the crystal ligand AND of the docking
+        # arm, which docks into a receptor derived from it. So the crystal
+        # receptor is written whenever any pose exists, not only when the
+        # crystal ligand itself parsed. Without this, 1,341 of 17,368 crystal
+        # systems carry a ligand and no experimental receptor.
+        if t != "crystal" and t not in per:
             continue
         try:
-            ca, rt, ax, ar, ae = protein_atoms(pth)
+            ca, rt, ax, ar, ae, sc, sv, pc = protein_atoms(pth)
         except Exception:
             continue
         if not len(ca):
             continue
         gt = g.create_group(f"protein/{t}")
         gt.create_dataset("ca", data=q(ca, centroid), compression="gzip")
-        gt.attrs["res_types"] = np.array(rt, dtype="S3")
-        lp = per[t][0][0]
+        gt.create_dataset("res_types", data=np.array(rt, dtype="S3"), compression="gzip")
+        gt.create_dataset("sc_centroid", data=q(sc, centroid), compression="gzip")
+        gt.create_dataset("sc_valid", data=sv, compression="gzip")
+        gt.create_dataset("pep_c", data=q(pc, centroid), compression="gzip")
+        lp = per[t][0][0] if t in per else next(iter(per.values()))[0][0]
         if len(ax):
             d = np.linalg.norm(ax[:, None, :] - lp[None, :, :], axis=2).min(1)
             keep = np.where(d <= SHELL)[0]
@@ -410,6 +502,35 @@ def build_system(sid, smiles, ccd, A, out):
                 gt.create_dataset("shell_coords", data=q(ax[keep], centroid), compression="gzip")
                 gt.create_dataset("shell_res_index", data=ar[keep])
                 gt.create_dataset("shell_elem", data=np.array([ae[i] for i in keep], dtype="S2"))
+    # Receptor fallback. smina docks into an AlphaFold model and writes only an
+    # SDF, so the loop above produces no protein group for it. Read that same
+    # model here: the pose is in its frame, so no superposition is needed.
+    if getattr(A, "af", "") and "smina" in per and "protein/smina" not in g:
+        acc = getattr(A, "_s2a", {}).get(sid)
+        fp = f"{A.af}/AF-{acc}-F1-model_v6.pdb" if acc else None
+        if fp and os.path.exists(fp):
+            try:
+                ca, rt, ax, ar, ae, sc, sv, pc = protein_atoms(fp)
+            except Exception:
+                ca = []
+            if len(ca):
+                gt = g.create_group("protein/smina")
+                gt.create_dataset("ca", data=q(ca, centroid), compression="gzip")
+                gt.create_dataset("res_types", data=np.array(rt, dtype="S3"),
+                                  compression="gzip")
+                gt.create_dataset("sc_centroid", data=q(sc, centroid), compression="gzip")
+                gt.create_dataset("sc_valid", data=sv, compression="gzip")
+                gt.create_dataset("pep_c", data=q(pc, centroid), compression="gzip")
+                lp = per["smina"][0][0]
+                if len(ax):
+                    d = np.linalg.norm(ax[:, None, :] - lp[None, :, :], axis=2).min(1)
+                    keep = np.where(d <= SHELL)[0]
+                    if keep.size:
+                        gt.create_dataset("shell_coords", data=q(ax[keep], centroid),
+                                          compression="gzip")
+                        gt.create_dataset("shell_res_index", data=ar[keep])
+                        gt.create_dataset("shell_elem",
+                                          data=np.array([ae[i] for i in keep], dtype="S2"))
     return None
 
 def main():
@@ -422,6 +543,8 @@ def main():
     ap.add_argument("--boltz-msa", default="/workspace/docking/output/boltz_out_msapilot")
     ap.add_argument("--crystal", default="/workspace/datasets/experimental_expansion/structures")
     ap.add_argument("--smina", default="/workspace/docking/output/smina/poses")
+    ap.add_argument("--af", default="")
+    ap.add_argument("--sys2acc", default="")
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=0)
     # Opt-in extras. With none of these given the build is byte-for-byte the
@@ -437,6 +560,7 @@ def main():
                     help="TSV of per-system skip reasons (default: <out>.reasons.tsv)")
     A = ap.parse_args()
     A._roots = json.load(open(A.roots)) if A.roots else None
+    A._s2a = json.load(open(A.sys2acc)) if A.sys2acc else {}
     smi = load_smiles(A.smiles_index)
     if A.smiles_json and A.inchikey_map:
         ikmap = json.load(open(A.inchikey_map)); iksmi = json.load(open(A.smiles_json))

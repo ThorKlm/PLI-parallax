@@ -313,8 +313,8 @@ APPLICABILITY = [
     ("Residues (median)",            414,   1344),
     ("Ligand heavy atoms (median)",   22,     44),
     ("Chains (median)",                2,      4),
-    ("Metal-containing (%)",         5.5,   19.0),
-    ("Interface binder (%)",        14.6,   32.4),
+    ("Metal-containing (\\%)",       5.5,   19.0),
+    ("Interface binder (\\%)",      14.6,   32.4),
 ]
 ZERO_CORE_LIGANDS = [("SF4", 535), ("CLA", 375), ("CO", 142), ("NAI", 87),
                      ("DD6", 84), ("CHL", 74), ("BCL", 46), ("CU1", 43),

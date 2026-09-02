@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Validation suite for the PLI-Parallax deposit.
 
-Fifty checks, read-only. Most run against the deposit alone. Seven compare the
+Fifty-seven checks, read-only. Most run against the deposit alone. Seven compare the
 coordinate store against the structures it was built from and need those
 structures on disk; they report as skipped otherwise.
 
-    python test_deposit.py [deposit_root]
+    python test_deposit_full.py [deposit_root]
 
 Environment:
     PLIP_STRUCTURES   crystal-tier source mmCIF, one file per PDB entry

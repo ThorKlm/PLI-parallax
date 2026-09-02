@@ -18,3 +18,4 @@ spyrmsd==0.9.0
 torch==2.12.0+cu126
 torchvision==0.27.0+cu126
 tqdm==4.68.0
+PyYAML

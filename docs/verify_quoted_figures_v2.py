@@ -12,7 +12,7 @@ import collections, glob, json, os, sys
 import numpy as np, h5py
 import pyarrow as pa, pyarrow.parquet as pq, pyarrow.compute as pc
 
-D = sys.argv[1] if len(sys.argv) > 1 else "/workspace/deposit_v3"
+D = sys.argv[1] if len(sys.argv) > 1 else "."
 L, M, S, ST = f"{D}/labels", f"{D}/metadata", f"{D}/splits", f"{D}/stores"
 claims, notes = [], []
 

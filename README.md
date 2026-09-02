@@ -28,8 +28,9 @@ the store; the store is the primary artifact.
     store/        build and verify the coordinate store
     splits/       construct the leakage-controlled split family
     reliability/  fit and apply the per-system reliability annotation
-    docs/         generate the field dictionary, manifest and validation report
-    tests/        validation suite for the published deposit
+    tests/test_deposit_full.py         57 checks against the deposit
+    docs/build_field_docs.py           field dictionary and record sets
+    docs/verify_quoted_figures_v2.py   figures quoted in the article
     figures/      manuscript figures and the script that generates them
 
 ## Environments
@@ -104,8 +105,10 @@ Code Apache-2.0. Data CC-BY-4.0.
 
 ## Scope
 
-Two boundaries. The npz shards are converted to the deposited Parquet tables by
-the scripts under `extract/`, but there is no driver tying them into a single
-run, so that step is reproduced by calling them in order rather than by invoking
-a stage. The corpus pocket annotation comes from a three-detector ensemble and 
-is deposited as a finished artifact.
+Three boundaries. The npz shards are converted to the deposited Parquet tables
+by the scripts under `extract/`, called in order rather than through a driver.
+The corpus pocket annotation comes from a three-detector ensemble and is
+deposited as a finished artifact. The reliability fit under `reliability/` runs
+against an intermediate agreement table that is not deposited, so the fitted
+arrays and the per-system field can be inspected but not regenerated from the
+deposit alone.
