@@ -12,16 +12,13 @@ repository-code: https://github.com/ThorKlm/PLI-parallax
 url: https://github.com/ThorKlm/PLI-parallax
 license: Apache-2.0
 version: 1.0.0
-date-released: 2026-08-26
+doi: 10.5281/zenodo.22258211
+date-released: 2026-09-02
 keywords:
   - protein-ligand interaction
   - structure prediction
   - molecular docking
   - machine learning dataset
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.21560088
-    description: Zenodo record for the dataset this pipeline produces
 references:
   - type: dataset
     title: "PLI-Parallax: multi-predictor and experimental protein-ligand
@@ -30,7 +27,6 @@ references:
       - family-names: Klamt
         given-names: Thor
         orcid: https://orcid.org/0009-0005-6168-3655
-    doi: 10.5281/zenodo.21560088
+    doi: 10.5281/zenodo.21560087
     year: 2026
-    version: 1.0.0
     license: CC-BY-4.0
