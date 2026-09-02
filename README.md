@@ -1,11 +1,12 @@
 # pli-parallax
 
 Pipeline producing three-dimensional coordinates for protein-ligand systems from
-four architecturally distinct structure-prediction and docking programs, together
-with residue-to-ligand-atom distance labels derived from those coordinates.
+three structure-prediction and docking programs run in four configurations,
+together with residue-to-ligand-atom distance labels derived from those
+coordinates.
 
-Data: 10.5281/zenodo.21560088 (CC-BY-4.0), byte-canonical
-Mirror: https://huggingface.co/datasets/ThorKl/PLI-parallax, re-encoded on upload
+Data: 10.5281/zenodo.21560088 (CC-BY-4.0), canonical
+Mirror: https://huggingface.co/datasets/ThorKl/PLI-parallax, byte-identical
 Code: this repository (Apache-2.0), archived at Zenodo on release
 Paper: ARTICLE_DOI once available
 
@@ -28,29 +29,33 @@ the store; the store is the primary artifact.
     splits/       construct the leakage-controlled split family
     reliability/  fit and apply the per-system reliability annotation
     docs/         generate the field dictionary, manifest and validation report
+    tests/        eight validation suites run against the published deposit
     figures/      manuscript figures and the script that generates them
     superseded/   retained for provenance, do not use, see file headers
 
 ## Environments
 
-Two, incompatible.
+Two, incompatible environments to be used.
 
     main   torch 2.12.0   Boltz-2, smina, all extraction   requirements.txt
     chai   torch 2.6.0    Chai-1 only                      requirements-chai.txt
 
-Use the correct interpreter per stage; do not mix. Note that gemmi and rdkit
-differ between the two, so ligand perception is not identical across them.
+Use the correct interpreter per stage. Note that gemmi and rdkit
+differ between the two, so ligand perception is not identical across them. The
+torch version is a requirement rather than a record: a later version produces
+slightly different coordinates from the same input under the same seed.
 
 ## Teacher arms
 
 Eight prediction arms across four configurations. Recycling depth was read from
-each run hparams.yaml rather than from documentation and differs between arms.
-The per-arm table is in the accompanying Data Descriptor.
+each run hparams.yaml rather than from documentation and differs between arms:
+the alignment-conditioned crystal arm ran one recycling step, the corpus pilot
+ran three. The per-arm table is in the accompanying Data Descriptor.
 
     chai1               recycles 1, timesteps 80, ESM, 5 samples, rank-0
     boltz2 single-seq   msa empty, recycles 1, sampling 50, 1 sample
-    boltz2 alignment    ColabFold MSA, recycles 1
-    smina               exhaustiveness 8 corpus, 4 crystal, num_modes 1
+    boltz2 alignment    ColabFold MSA, recycles 1 crystal / 3 corpus pilot
+    smina               exhaustiveness 4, num_modes 1
 
 ## Install
 
@@ -63,13 +68,31 @@ Open Babel 3.1.1, MMseqs2.
 
 A few minutes plus teacher model weight downloads.
 
+## Paths
+
+Pipeline scripts use the absolute paths of the machine they ran on. Most stages
+need the intermediate prediction outputs, which are not deposited, so some of 
+them are not runnable elsewhere. The scripts that read only the published
+deposit take the deposit root as an argument: the validation suite under
+`tests/`, `docs/build_field_docs.py` and `docs/verify_quoted_figures.py`.
+
+The scripts that read the published deposit take the
+deposit root as an argument, defaulting to the current directory:
+
+    tests/test_deposit*.py            eight validation suites
+    docs/build_field_docs.py          field dictionary and record sets
+    docs/verify_quoted_figures_v2.py  every figure quoted in the article
+
 ## Data
 
 This pipeline produces the dataset archived at Zenodo 10.5281/zenodo.21560088
-(CC-BY-4.0). A convenience mirror of the tabular layer is at
-https://huggingface.co/datasets/ThorKl/PLI-parallax; its Parquet files are
-re-encoded on upload, so checksums differ from the Zenodo manifest while the
-content is identical. This repository contains code only.
+(CC-BY-4.0), released as a single 6.2 GB tar with the README, the Croissant
+metadata and the manifest also provided unarchived, so the record can be
+inspected before download. Extract with `tar xf pli_parallax_v1.0.0.tar` into an
+empty directory and verify with `sha256sum -c MANIFEST.sha256`, which reports 43
+files. A mirror is at https://huggingface.co/datasets/ThorKl/PLI-parallax
+carrying the same bytes, so the Zenodo manifest verifies against either copy.
+This repository contains code only.
 
 ## Cite
 
@@ -79,11 +102,10 @@ See CITATION.cff.
 
 Code Apache-2.0. Data CC-BY-4.0.
 
-## Not included
+## Scope
 
-Two steps in the published pipeline are not in this repository. No script here
-writes the deposited Parquet distance tables from the intermediate npz shards;
-that conversion was performed ad hoc, so the deposited tables are not
-regenerable from this code alone, although every stage before and after them is.
-The corpus-tier pocket annotation was produced by a three-detector ensemble
-maintained outside this project and is deposited as a finished artifact.
+Two boundaries. The npz shards are converted to the deposited Parquet tables by
+the scripts under `extract/`, but there is no driver tying them into a single
+run, so that step is reproduced by calling them in order rather than by invoking
+a stage. The corpus pocket annotation comes from a three-detector ensemble and 
+is deposited as a finished artifact.

@@ -18,3 +18,19 @@ keywords:
   - structure prediction
   - molecular docking
   - machine learning dataset
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21560088
+    description: Zenodo record for the dataset this pipeline produces
+references:
+  - type: dataset
+    title: "PLI-Parallax: multi-predictor and experimental protein-ligand
+      coordinates with distance and contact labels"
+    authors:
+      - family-names: Klamt
+        given-names: Thor
+        orcid: https://orcid.org/0009-0005-6168-3655
+    doi: 10.5281/zenodo.21560088
+    year: 2026
+    version: 1.0.0
+    license: CC-BY-4.0
