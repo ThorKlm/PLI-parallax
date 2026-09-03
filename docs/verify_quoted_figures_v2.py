@@ -12,7 +12,7 @@ import collections, glob, json, os, sys
 import numpy as np, h5py
 import pyarrow as pa, pyarrow.parquet as pq, pyarrow.compute as pc
 
-D = sys.argv[1] if len(sys.argv) > 1 else "."
+D = sys.argv[1] if len(sys.argv) > 1 else "/workspace/deposit_v3"
 L, M, S, ST = f"{D}/labels", f"{D}/metadata", f"{D}/splits", f"{D}/stores"
 claims, notes = [], []
 
@@ -223,6 +223,29 @@ claim(sec, "C3 ligand C2ST AUC, corpus", famean(ssc, "c2st_auc", "C3"), 0.824, t
 claim(sec, "C2l ligand C2ST AUC, crystal", famean(ssx, "c2st_auc", "C2l"), 0.962, tol=0.002)
 claim(sec, "C2l ligand C2ST AUC, corpus", famean(ssc, "c2st_auc", "C2l"), 0.618, tol=0.002)
 
+# --- cold-family cross-fold identity and what a warm axis delivers, per tier
+for _tier, _lo, _hi, _pw in (("corpus", 0.2370, 0.4780, 1.00),
+                             ("crystal", 0.3740, 0.9540, 0.51)):
+    _t = pq.read_table(f"{D}/splits/split_summary_{_tier}.parquet",
+                       columns=["split_tag", "max_protein_identity_cov80",
+                                "max_protein_identity_local",
+                                "test_frac_exact_protein_seen"]).to_pydict()
+    _cold = [v for tag, v in zip(_t["split_tag"], _t["max_protein_identity_cov80"])
+             if tag.split("__")[0] in ("C2p", "C3", "C3comp")]
+    claim(sec, f"cold-family identity minimum, {_tier}", round(min(_cold), 4), _lo)
+    claim(sec, f"cold-family identity maximum, {_tier}", round(max(_cold), 4), _hi)
+    claim(sec, f"raw local identity is uninformative, {_tier}",
+          len(set(_t["max_protein_identity_local"])), 1)
+    _warm = [v for tag, v in zip(_t["split_tag"], _t["test_frac_exact_protein_seen"])
+             if tag.split("__")[0] in ("C1", "C2l")]
+    claim(sec, f"warm protein axis exact-seen fraction, {_tier}",
+          round(float(np.mean(_warm)), 2), _pw, tol=0.02)
+    if _tier == "crystal":
+        _c2p = [v for tag, v in zip(_t["split_tag"], _t["max_protein_identity_cov80"])
+                if tag.split("__")[0] == "C2p"]
+        claim(sec, "crystal C2p minimum cross-fold identity",
+              round(min(_c2p), 4), 0.8410)
+
 # -------------------------------------------------- 9. distances and censoring
 sec = "distances"
 viol = worst = 0
@@ -332,11 +355,9 @@ MANUAL = [
   "boltz processed-input manifest"),
  ("splits", "886 / 896 / 900 protein clusters at 0.30 / 0.40 / 0.50", "MMseqs2 output"),
  ("splits", "14,852 key-chain sequences, 7,149 and 10,714 clusters", "MMseqs2 output"),
- ("splits", "87,652 against 146 corpus pairs above 0.30 identity", "all-vs-all identity table"),
  ("splits", "9,455,750 against 125,832 crystal pairs", "all-vs-all identity table"),
- ("store", "structural overhead 45 and 57 per cent", "h5py per-dataset inspection"),
  ("environment", "gemmi, pyarrow, pandas, rdkit versions", "the build environment"),
- ("suites", "191 checks over eight suites", "run_all_tests.sh"),
+ ("suites", "57 checks, fifty against the deposit and seven against source structures", "tests/test_deposit_full.py"),
 ]
 print(f"\n===== not derivable from the deposit ({len(MANUAL)})")
 for sec_, name, need in MANUAL:
