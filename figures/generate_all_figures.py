@@ -360,7 +360,7 @@ def create_figure_1_workflow():
     ])
     draw_box(ax, xr, y_tier, bw, bh, COLORS["tier"], [
         ("Crystal tier", True, FONT_STAGE),
-        ("experimental complexes from BioLiP2", False, FONT_DETAIL),
+        ("experimental complexes, BioLiP2 selection", False, FONT_DETAIL),
         (f"{CRYSTAL_COVERAGE[0][1]:,} systems with ground truth", False, FONT_DETAIL),
     ])
     connect(ax, xl, y_tier, bh, xl, y_teach, h_teach)
@@ -369,7 +369,7 @@ def create_figure_1_workflow():
         ("Four teacher configurations on shared systems", True, FONT_STAGE),
         ("Chai-1 (ESM, 1 recycle)   Boltz-2 single-sequence   Boltz-2 with MSA   smina docking",
          False, FONT_DETAIL),
-        ("per-arm settings in Table 1", False, FONT_DETAIL),
+        ("per-arm settings in Table 2", False, FONT_DETAIL),
     ])
     connect(ax, cx, y_teach, h_teach, cx, y_lab, bh)
     draw_box(ax, cx, y_lab, 8.0, bh, COLORS["produced"], [

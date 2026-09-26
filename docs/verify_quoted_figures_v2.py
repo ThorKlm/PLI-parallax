@@ -1,3 +1,4 @@
+ls
 #!/usr/bin/env python
 """Recompute every manuscript figure that is derivable from the deposit.
 
