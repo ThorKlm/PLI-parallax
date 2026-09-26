@@ -94,6 +94,22 @@ files. A mirror is at https://huggingface.co/datasets/ThorKl/PLI-parallax
 carrying the same bytes, so the Zenodo manifest verifies against either copy.
 This repository contains code only.
 
+## Notebooks
+
+Two notebooks are provided in usage_and_evaluation_notebooks/ to cover several
+use cases and to ease the use of the database across them.
+
+    usage_and_evaluation_notebooks/pli_parallax_usage_examples.ipynb
+        loading, the derivation check, the three-bead representation
+        https://colab.research.google.com/github/ThorKlm/PLI-parallax/blob/main/usage_and_evaluation_notebooks/pli_parallax_usage_examples.ipynb
+    usage_and_evaluation_notebooks/pli_parallax_validation_notebook.ipynb
+        recomputes every quoted reliability, site-access and cutoff value, about 80 s
+        https://colab.research.google.com/github/ThorKlm/PLI-parallax/blob/main/usage_and_evaluation_notebooks/pli_parallax_validation_notebook.ipynb
+
+The notebooks are optimised for Google Colab but also run locally with numpy,
+pandas, pyarrow, scipy, scikit-learn, matplotlib and huggingface_hub. The
+validation figures are written to the corresponding figures/validation relative directory.
+
 ## Cite
 
 See CITATION.cff.
