@@ -1,0 +1,3 @@
+cutoff,configuration,systems_before,systems_after,unanimous_before,unanimous_after,difference,difference_ci
+chai1,T1__release__chai1cut,5594,1535,0.07906773183420865,0.0714527814260899,-0.0076149504081187425,"[-0.0144, -0.0004]"
+boltz2,T1__release__boltz2cut,6391,738,0.07854118655876521,0.0676326387672912,-0.010908547791474016,"[-0.0197, -0.0018]"

@@ -1,0 +1,11 @@
+quantity,value
+calibration cohort,"7,129"
+"excluded, empty docking 4 A contact set",5
+"coverage core, crystal / cross-docked","7,166 / 23,451"
+"core with a non-empty experimental set, crystal","7,145"
+"core not annotated, crystal / cross-docked",32 / 18
+base rate,"0.0548 [0.0542, 0.0554]"
+"cross-docked support shares, 1 / 2 / 3 predictors (%)",84.9 / 12.6 / 2.6
+systems before / after the Chai-1 cutoff,"5,594 / 1,535"
+systems before / after the Boltz-2 cutoff,"6,391 / 738"
+"bootstrap resamples, seed","1,000, 0"
