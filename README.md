@@ -12,10 +12,10 @@ Paper: ARTICLE_DOI once available
 
 ## What this produces
 
-A coordinate store in HDF5 holding, per system and per teacher, the receptor
+A coordinate store in HDF5 holding, per system and per prediction arm, the receptor
 C-alpha trace, every receptor heavy atom within 15 A of the ligand, a side-chain
 centroid and a backbone carbonyl carbon per shell residue, and ligand heavy-atom
-coordinates for up to five poses on a fixed teacher axis. Distance tables in
+coordinates for up to five poses on a fixed five-entry axis. Distance tables in
 Parquet hold a materialised view of that store at a fixed 15 A cutoff, recording
 d_ca, d_min and contact flags at 4, 5 and 8 A. The tables are recomputable from
 the store; the store is the primary artifact.
@@ -53,7 +53,7 @@ ran three. The per-arm table is in the accompanying Data Descriptor.
 
     chai1               recycles 1, timesteps 80, ESM, 5 samples, rank-0
     boltz2 single-seq   msa empty, recycles 1, sampling 50, 1 sample
-    boltz2 alignment    ColabFold MSA, recycles 1 crystal / 3 corpus pilot
+    boltz2 alignment    ColabFold MSA, recycles 1 crystal / 3 cross-docked pilot
     smina               exhaustiveness 4, num_modes 1
 
 ## Install
@@ -65,7 +65,7 @@ Open Babel 3.1.1, MMseqs2.
     python -m venv main && ./main/bin/pip install -r requirements.txt
     python -m venv chai && ./chai/bin/pip install -r requirements-chai.txt
 
-A few minutes plus teacher model weight downloads.
+This would take a few minutes plus model weight downloads.
 
 ## Paths
 
@@ -89,8 +89,8 @@ This pipeline produces the dataset archived at Zenodo 10.5281/zenodo.21560088
 (CC-BY-4.0), released as a single 6.2 GB tar with the README, the Croissant
 metadata and the manifest also provided unarchived, so the record can be
 inspected before download. Extract with `tar xf pli_parallax_v1.0.0.tar` into an
-empty directory and verify with `sha256sum -c MANIFEST.sha256`, which reports 43
-files. A mirror is at https://huggingface.co/datasets/ThorKl/PLI-parallax
+empty directory and verify with `sha256sum -c MANIFEST.sha256`.
+A mirror is at https://huggingface.co/datasets/ThorKl/PLI-parallax
 carrying the same bytes, so the Zenodo manifest verifies against either copy.
 This repository contains code only.
 
@@ -123,7 +123,6 @@ Code Apache-2.0. Data CC-BY-4.0.
 Three boundaries. The npz shards are converted to the deposited Parquet tables
 by the scripts under `extract/`, called in order rather than through a driver.
 The corpus pocket annotation comes from a three-detector ensemble and is
-deposited as a finished artifact. The reliability fit under `reliability/` runs
-against an intermediate agreement table that is not deposited, so the fitted
-arrays and the per-system field can be inspected but not regenerated from the
-deposit alone.
+deposited as a finished artifact. The reliability fit ran against an
+intermediate agreement table that is not deposited, so the fitted arrays and the
+per-system field can be inspected but not regenerated from the deposit alone.
