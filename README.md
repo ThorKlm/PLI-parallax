@@ -27,7 +27,6 @@ the store; the store is the primary artifact.
     extract/      derive distance labels from teacher outputs, merge, dedup
     store/        build and verify the coordinate store
     splits/       construct the leakage-controlled split family
-    reliability/  fit and apply the per-system reliability annotation
     docs/         generate the field dictionary and verify quoted figures
     tests/        validation suite for the published deposit
     figures/      manuscript figures and the script that generates them
