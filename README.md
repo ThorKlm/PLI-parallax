@@ -25,7 +25,7 @@ the store; the store is the primary artifact.
     input_prep/   build teacher inputs from pair lists and receptors
     generate/     run each teacher
     extract/      derive distance labels from teacher outputs, merge, dedup
-    store/        build and verify the coordinate store
+    store/        build and verify the coordinate store and the pocket table
     splits/       construct the leakage-controlled split family
     reliability/  fit the per-system reliability field from the deposit
     provenance/   one-off repairs and legacy calibration scripts
