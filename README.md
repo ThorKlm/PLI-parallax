@@ -27,6 +27,8 @@ the store; the store is the primary artifact.
     extract/      derive distance labels from teacher outputs, merge, dedup
     store/        build and verify the coordinate store
     splits/       construct the leakage-controlled split family
+    reliability/  fit the per-system reliability field from the deposit
+    provenance/   one-off repairs and legacy calibration scripts
     docs/         generate the field dictionary and verify quoted figures
     tests/        validation suite for the published deposit
     figures/      manuscript figures and the script that generates them
@@ -77,10 +79,13 @@ the deposit root as an argument, defaulting to the current directory:
     docs/build_field_docs.py           field dictionary and record sets
     docs/verify_quoted_figures_v2.py   figures quoted in the article
     docs/verify_scoring_figures.py     scoring figures quoted in the article
+    reliability/fit_reliability.py     regenerates the reliability field
 
 Seven of the checks compare the coordinate store against the structures it was
 built from and report as skipped unless PLIP_STRUCTURES, PLIP_AF and
-PLIP_SYS2ACC point at them.
+PLIP_SYS2ACC point at them. The reliability script writes
+system_reliability.parquet and residue_support.parquet, both of which are
+deposited files, so give it an --out directory outside the deposit.
 
 ## Data
 
@@ -119,9 +124,7 @@ Code Apache-2.0. Data CC-BY-4.0.
 
 ## Scope
 
-Three boundaries. The npz shards are converted to the deposited Parquet tables
+Two boundaries. The npz shards are converted to the deposited Parquet tables
 by the scripts under `extract/`, called in order rather than through a driver.
 The corpus pocket annotation comes from a three-detector ensemble and is
-deposited as a finished artifact. The reliability fit ran against an
-intermediate agreement table that is not deposited, so the fitted arrays and the
-per-system field can be inspected but not regenerated from the deposit alone.
+deposited as a finished artifact.

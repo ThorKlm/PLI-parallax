@@ -369,7 +369,7 @@ def create_figure_1_workflow():
         ("Four teacher configurations on shared systems", True, FONT_STAGE),
         ("Chai-1 (ESM, 1 recycle)   Boltz-2 single-sequence   Boltz-2 with MSA   smina docking",
          False, FONT_DETAIL),
-        ("per-arm settings in Table 2", False, FONT_DETAIL),
+        ("per-arm settings in Table 1", False, FONT_DETAIL),
     ])
     connect(ax, cx, y_teach, h_teach, cx, y_lab, bh)
     draw_box(ax, cx, y_lab, 8.0, bh, COLORS["produced"], [

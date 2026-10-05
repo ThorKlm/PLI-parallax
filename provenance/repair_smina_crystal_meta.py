@@ -1,9 +1,15 @@
-"""Build the corrected smina crystal meta, verify the staged pair, recompute every
-quoted figure against the corrected deposit, and emit the reliability columns."""
-import collections, glob, itertools, os, numpy as np, pandas as pd
+"""One-off repair of the smina crystal arm after the re-dock.
+
+Builds the corrected meta table from the re-docked contacts, checks it against the
+superseded pair for schema and set identity, and recomputes the coverage figures
+quoted in the article. The reliability field is fitted separately by
+reliability/fit_reliability.py, which reads the deposit rather than the re-dock
+staging directory.
+"""
+
+import glob, os, numpy as np, pandas as pd
 import pyarrow as pa, pyarrow.parquet as pq
 L='/workspace/deposit_v3/labels'
-SM='/workspace/smina_v2_b/v3/labels/exp_smina_v3_*.npz'
 ST='/workspace/final_five_rerun'
 os.makedirs(ST, exist_ok=True)
 
@@ -58,54 +64,3 @@ claims=[('corpus triple', len(S['smina_corpus']&S['boltz2_corpus']&S['chai1_corp
 for n,got,want in claims:
     tag='' if want is None else (' PASS' if got==want else f' FAIL (quoted {want:,})')
     print(f'  {n:22s} {got:>10,}{tag}')
-
-print('\n=== 4. reliability columns')
-def parq(n, tier, thr='contact_4A'):
-    fn=('labels_crystal_groundtruth_contacts.parquet' if n=='crystal_groundtruth'
-        else f'labels_{n}_{tier}_contacts.parquet')
-    t=pq.read_table(f'{L}/{fn}', columns=['system_id','res_row',thr])
-    d=t.filter(t[thr]).to_pydict(); o=collections.defaultdict(set)
-    for s,r in zip(d['system_id'],d['res_row']): o[s].add(r)
-    return o
-def npzs(pat, ang=4.0):
-    o={}
-    for f in sorted(glob.glob(pat)):
-        d=np.load(f, allow_pickle=True)
-        sid,off,rr,dm=d['system_id'],d['contact_offsets'],d['res_row'],d['d_min']
-        for i,s in enumerate(sid):
-            a,b=int(off[i]),int(off[i+1]); o[str(s)]=set(rr[a:b][dm[a:b]<=ang].tolist())
-    return o
-def jac(a,b): return len(a&b)/len(a|b) if (a|b) else np.nan
-def agree(T,ids): return np.array([np.mean([jac(T[a][s],T[b][s])
-                    for a,b in itertools.combinations(T,2)]) for s in ids])
-from sklearn.isotonic import IsotonicRegression
-GT=parq('crystal_groundtruth','crystal')
-Tk={'chai1':parq('chai1','crystal'),'boltz2':parq('boltz2','crystal'),'smina':npzs(SM)}
-ik=sorted(set(GT).intersection(*[set(v) for v in Tk.values()]))
-ak=agree(Tk,ik); mk=np.array([np.mean([jac(Tk[n][s],GT[s]) for n in Tk]) for s in ik])
-rng=np.random.default_rng(0); perm=rng.permutation(len(ik)); h=len(ik)//2
-iso=IsotonicRegression(out_of_bounds='clip').fit(ak[perm[:h]], mk[perm[:h]])
-q90=np.quantile(np.abs(iso.predict(ak[perm[h:]])-mk[perm[h:]]), 0.9)
-np.savez('/workspace/reports/reliability_fit.npz', cal_agreement=ak[perm[h:]], cal_observed=mk[perm[h:]], fit_agreement=ak[perm[:h]], fit_observed=mk[perm[:h]])
-Tc={n:parq(n,'corpus') for n in ('chai1','boltz2','smina')}
-ic=sorted(set.intersection(*[set(v) for v in Tc.values()]))
-ac=agree(Tc,ic)
-sysrel=pd.concat([
-  pd.DataFrame({'system_id':ik,'tier':'crystal','agreement':ak,
-                'pred_accuracy':iso.predict(ak),'conformal_halfwidth_90':q90}),
-  pd.DataFrame({'system_id':ic,'tier':'corpus','agreement':ac,
-                'pred_accuracy':iso.predict(ac),'conformal_halfwidth_90':q90})])
-sysrel.to_parquet(f'{ST}/system_reliability.parquet', index=False)
-print(f'  system_reliability.parquet {len(sysrel):,} rows '
-      f'(crystal {len(ik):,}, corpus {len(ic):,})')
-rows=[]
-for tier,T,ids in (('crystal',Tk,ik),('corpus',Tc,ic)):
-    for s in ids:
-        cnt=collections.Counter()
-        for n in T:
-            for r in T[n][s]: cnt[r]+=1
-        for r,k in cnt.items(): rows.append((s,tier,r,k))
-sup=pd.DataFrame(rows, columns=['system_id','tier','res_row','n_teachers_asserting'])
-sup.to_parquet(f'{ST}/residue_support.parquet', index=False)
-print(f'  residue_support.parquet {len(sup):,} rows')
-print(sup.groupby(['tier','n_teachers_asserting']).size().to_string())
